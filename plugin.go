@@ -22,7 +22,7 @@ type Plugin struct {
 	Env           map[string]string
 	RawNotify     []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify        []PluginNotify           `yaml:"notify,omitempty"`
-	Plugins       interface{}                `yaml:"plugins,omitempty"`
+	Plugins       interface{}              `yaml:"plugins,omitempty"`
 }
 
 // HookConfig Plugin hook configuration
@@ -96,7 +96,6 @@ type Build struct {
 	RawEnv   interface{}       `json:"env" yaml:",omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`
 	MetaData map[string]string `json:"meta_data,omitempty" yaml:"meta_data,omitempty"`
-	// Notify  []Notify          `yaml:"notify,omitempty"`
 }
 
 // UnmarshalJSON set defaults properties
