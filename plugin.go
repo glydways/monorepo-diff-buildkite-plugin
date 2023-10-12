@@ -44,11 +44,6 @@ type Group struct {
 	Steps []Step `yaml:"steps"`
 }
 
-// GithubStatusNotification is notification config for github_commit_status
-type GithubStatusNotification struct {
-	Context string `yaml:"context,omitempty"`
-}
-
 // EnvironmentSecret is config aws secret
 type GithubStatusNotification struct {
 	Context string `yaml:"context,omitempty"`
