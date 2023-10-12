@@ -22,9 +22,7 @@ type Plugin struct {
 	Env           map[string]string
 	RawNotify     []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify        []PluginNotify           `yaml:"notify,omitempty"`
-//	RawPlugins    []map[string]interface{} `json:"plugins" yaml:",omitempty"`
-//	Plugins       []Plugins                `yaml:"plugins,omitempty"`
-	RawPlugins       interface{}                `yaml:"plugins,omitempty"`
+	Plugins       interface{}                `yaml:"plugins,omitempty"`
 }
 
 // HookConfig Plugin hook configuration
@@ -44,7 +42,7 @@ type Group struct {
 	Steps []Step `yaml:"steps"`
 }
 
-// EnvironmentSecret is config aws secret
+// GithubStatusNotification is notification config for github_commit_status
 type GithubStatusNotification struct {
 	Context string `yaml:"context,omitempty"`
 }
@@ -84,9 +82,7 @@ type Step struct {
 	SoftFail  interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
 	RawNotify []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify    []StepNotify             `yaml:"notify,omitempty"`
-//	RawPlugins []map[string]interface{} `json:"plugins" yaml:",omitempty"`
-//	Plugins    []StepPlugins             `yaml:"plugins,omitempty"`
-	RawPlugins    interface{}             `yaml:"plugins,omitempty"`
+	Plugins    interface{}             `yaml:"plugins,omitempty"`
 }
 
 // Agent is Buildkite agent definition
