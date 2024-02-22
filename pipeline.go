@@ -163,27 +163,43 @@ func generatePipeline(steps []Step, plugin Plugin) (*os.File, error) {
 	}
 
 	yamlSteps := make([]yaml.Marshaler, len(steps))
+  log.Debug("1")
+  log.Debug(yamlSteps)
 
 	for i, step := range steps {
 		yamlSteps[i] = step
 	}
 
+  log.Debug("2")
+  log.Debug(yamlSteps)
+
 	if plugin.Wait {
 		yamlSteps = append(yamlSteps, WaitStep{})
 	}
 
+  log.Debug("3")
+  log.Debug(yamlSteps)
+
 	for _, cmd := range plugin.Hooks {
 		yamlSteps = append(yamlSteps, Step{Command: cmd.Command})
 	}
+  log.Debug("4")
+  log.Debug(yamlSteps)
 
 	yamlNotify := make([]yaml.Marshaler, len(plugin.Notify))
 	for i, n := range plugin.Notify {
 		yamlNotify[i] = n
 	}
 
+  log.Debug("5")
+  log.Debug(yamlSteps)
+
 	pipeline := map[string][]yaml.Marshaler{
 		"steps": yamlSteps,
 	}
+
+  log.Debug("6")
+  log.Debug(yamlSteps)
 
 	if len(yamlNotify) > 0 {
 		pipeline["notify"] = yamlNotify
