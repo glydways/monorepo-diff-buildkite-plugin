@@ -185,6 +185,8 @@ func initializePlugin(data string) (Plugin, error) {
 					return Plugin{}, errors.New("failed to parse plugin configuration")
 				}
 
+				log.Info("plugin after unmarshal")
+				log.Info(plugin)
 				return plugin, nil
 			}
 		}
