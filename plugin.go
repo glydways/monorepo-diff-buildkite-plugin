@@ -113,12 +113,7 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 
 	_ = json.Unmarshal(data, def)
 
-	log.Info("def")
-	log.Info(def)
 	*plugin = Plugin(*def)
-
-	log.Info("plugin")
-	log.Info(plugin)
 
 	parseResult, err := parseEnv(plugin.RawEnv)
 	if err != nil {
@@ -163,30 +158,21 @@ func initializePlugin(data string) (Plugin, error) {
 
 	var pluginConfigs []map[string]json.RawMessage
 
-	log.Info("rawmessage")
-	log.Info(pluginConfigs)
 	if err := json.Unmarshal([]byte(data), &pluginConfigs); err != nil {
 		log.Debug(err)
 		return Plugin{}, errors.New("failed to parse plugin configuration")
 	}
-
-	log.Info("after unmarshal")
-	log.Info(pluginConfigs)
 
 	for _, p := range pluginConfigs {
 		for key, pluginConfig := range p {
 			if strings.HasPrefix(key, pluginName) {
 				var plugin Plugin
 
-				log.Info("PluginConfig")
-				log.Info(pluginConfig)
 				if err := json.Unmarshal(pluginConfig, &plugin); err != nil {
 					log.Debug(err)
 					return Plugin{}, errors.New("failed to parse plugin configuration")
 				}
 
-				log.Info("plugin after unmarshal")
-				log.Info(plugin)
 				return plugin, nil
 			}
 		}
