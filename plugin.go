@@ -68,21 +68,23 @@ type StepNotify struct {
 
 // Step is buildkite pipeline definition
 type Step struct {
-	Group     string                   `yaml:"group,omitempty"`
-	Trigger   string                   `yaml:"trigger,omitempty"`
-	Label     string                   `yaml:"label,omitempty"`
-	Build     Build                    `yaml:"build,omitempty"`
-	Command   interface{}              `yaml:"command,omitempty"`
-	Commands  interface{}              `yaml:"commands,omitempty"`
-	Agents    Agent                    `yaml:"agents,omitempty"`
-	Artifacts []string                 `yaml:"artifacts,omitempty"`
-	RawEnv    interface{}              `json:"env" yaml:",omitempty"`
-	Env       map[string]string        `yaml:"env,omitempty"`
-	Async     bool                     `yaml:"async,omitempty"`
-	SoftFail  interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
-	RawNotify []map[string]interface{} `json:"notify" yaml:",omitempty"`
-	Notify    []StepNotify             `yaml:"notify,omitempty"`
-	Plugins   interface{}              `yaml:"plugins,omitempty"`
+	Group            string                   `yaml:"group,omitempty"`
+	Trigger          string                   `yaml:"trigger,omitempty"`
+	Label            string                   `yaml:"label,omitempty"`
+	Build            Build                    `yaml:"build,omitempty"`
+	Command          interface{}              `yaml:"command,omitempty"`
+	Commands         interface{}              `yaml:"commands,omitempty"`
+	Agents           Agent                    `yaml:"agents,omitempty"`
+	Artifacts        []string                 `yaml:"artifacts,omitempty"`
+	RawEnv           interface{}              `json:"env" yaml:",omitempty"`
+	Env              map[string]string        `yaml:"env,omitempty"`
+	Async            bool                     `yaml:"async,omitempty"`
+	SoftFail         interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
+	RawNotify        []map[string]interface{} `json:"notify" yaml:",omitempty"`
+	Notify           []StepNotify             `yaml:"notify,omitempty"`
+	Plugins          interface{}              `yaml:"plugins,omitempty"`
+	TimeoutInMinutes interface{}              `json:"timeout_in_minutes" yaml:"timeout_in_minutes,omitempty"`
+	Parallelism      interface{}              `json:"parallelism" yaml:"parallelism,omitempty"`
 }
 
 // Agent is Buildkite agent definition
