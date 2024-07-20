@@ -125,6 +125,11 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 				}
 				for _, f := range files {
 					// If the file matches an exclude, move on to the next file.
+					if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+						fmt.Println("Checking if exclude pattern matches:\n", includes)
+						fmt.Println("Pattern:\n", e)
+						fmt.Println("File:\n", f)
+					}
 					match, err := matchPath(e, f)
 					if err != nil {
 						return nil, err
