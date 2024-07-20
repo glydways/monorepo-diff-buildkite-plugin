@@ -99,19 +99,85 @@ func diff(command string) ([]string, error) {
 func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 	steps := []Step{}
 
+	// Extract the includes and excludes
 	for _, w := range watch {
+		// Separate out excludes vs includes
+		includes := []string{}
+		excludes := []string{}
 		for _, p := range w.Paths {
+			if strings.HasPrefix(p, "!") {
+				excludes = append(excludes, p)
+			} else {
+				includes = append(includes, p)
+			}
+		}
+
+		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+			fmt.Println("Exclude Patterns:\n", excludes)
+		}
+
+		include_files := []string{}
+		// try to match the excludes
+		if len(excludes) != 0 {
 			for _, f := range files {
-				match, err := matchPath(p, f)
+				for _, e := range excludes {
+					if strings.HasPrefix(e, "!") {
+						e = e[1:]
+					}
+					// If the file matches an exclude, move on to the next file.
+					if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+						fmt.Println("Checking if exclude pattern matches:")
+						fmt.Println("Pattern:\n", e)
+						fmt.Println("File:\n", f)
+					}
+					match, err := matchPath(e, f)
+					if err != nil {
+						return nil, err
+					}
+					if match {
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Excluding file.\n", f)
+						}
+						break
+					} else {
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Pattern did not match.")
+						}
+						include_files = append(include_files, f)
+					}
+				}
+			}
+		} else {
+			include_files = files
+		}
+
+		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+			fmt.Println("Filtered Files:\n", include_files)
+			fmt.Println("Searching for Include Patterns:\n", includes)
+		}
+
+		// Iterate over the filtered files for any matches
+		for _, f := range include_files {
+			for _, i := range includes {
+				match, err := matchPath(i, f)
 				if err != nil {
 					return nil, err
 				}
+				// Add the step if an include was found
 				if match {
 					steps = append(steps, w.Step)
+					if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+						fmt.Println("Found Match: \n", i)
+						fmt.Println("Adding Step: \n", w.Step)
+					}
 					break
 				}
 			}
 		}
+	}
+
+	if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+		fmt.Println("Matched Steps:\n", steps)
 	}
 
 	return dedupSteps(steps), nil
