@@ -113,8 +113,8 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		}
 
 		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
-			fmt.Printf("Include Patterns:\n%s\n", string(includes))
-			fmt.Printf("Exclude Patterns:\n%s\n", string(excludes))
+			fmt.Println("Include Patterns:\n", includes)
+			fmt.Println("Exclude Patterns:\n", excludes)
 		}
 
 		include_files := []string{}
@@ -140,7 +140,7 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		}
 
 		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
-			fmt.Printf("Filtered Files:\n%s\n", string(include_files))
+			fmt.Println("Filtered Files:\n", include_files)
 		}
 
 		// Iterate over the filtered files for any matches
@@ -160,7 +160,7 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 	}
 
 	if env("MONOREPO_DIFF_DEBUG", "") == "true" {
-		fmt.Printf("Matched Steps:\n%s\n", string(steps))
+		fmt.Println("Matched Steps:\n", steps)
 	}
 
 	return dedupSteps(steps), nil
