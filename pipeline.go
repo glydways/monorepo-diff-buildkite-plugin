@@ -119,14 +119,14 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		include_files := []string{}
 		// try to match the excludes
 		if len(excludes) != 0 {
-			for _, e := range excludes {
-				if strings.HasPrefix(e, "!") {
-					e = e[1:]
-				}
-				for _, f := range files {
+			for _, f := range files {
+				for _, e := range excludes {
+					if strings.HasPrefix(e, "!") {
+						e = e[1:]
+					}
 					// If the file matches an exclude, move on to the next file.
 					if env("MONOREPO_DIFF_DEBUG", "") == "true" {
-						fmt.Println("Checking if exclude pattern matches:\n", includes)
+						fmt.Println("Checking if exclude pattern matches:")
 						fmt.Println("Pattern:\n", e)
 						fmt.Println("File:\n", f)
 					}
@@ -134,7 +134,15 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 					if err != nil {
 						return nil, err
 					}
-					if !match {
+					if match {
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Excluding file.\n", f)
+						}
+						break
+					} else {
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Pattern did not match.")
+						}
 						include_files = append(include_files, f)
 					}
 				}
@@ -149,8 +157,8 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		}
 
 		// Iterate over the filtered files for any matches
-		for _, i := range includes {
-			for _, f := range include_files {
+		for _, f := range include_files {
+			for _, i := range includes {
 				match, err := matchPath(i, f)
 				if err != nil {
 					return nil, err
