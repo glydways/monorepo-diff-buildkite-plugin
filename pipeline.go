@@ -112,6 +112,11 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 			}
 		}
 
+		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+			fmt.Printf("Include Patterns:\n%s\n", string(includes))
+			fmt.Printf("Exclude Patterns:\n%s\n", string(excludes))
+		}
+
 		include_files := []string{}
 		// try to match the excludes
 		if len(excludes) != 0 {
@@ -134,6 +139,10 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 			include_files = files
 		}
 
+		if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+			fmt.Printf("Filtered Files:\n%s\n", string(include_files))
+		}
+
 		// Iterate over the filtered files for any matches
 		for _, i := range includes {
 			for _, f := range include_files {
@@ -148,6 +157,10 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 				}
 			}
 		}
+	}
+
+	if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+		fmt.Printf("Matched Steps:\n%s\n", string(steps))
 	}
 
 	return dedupSteps(steps), nil
