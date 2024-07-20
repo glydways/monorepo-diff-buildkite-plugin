@@ -232,8 +232,7 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 					Step:  Step{Trigger: "txt"},
 				},
 			},
-			Expected: []Step{
-			},
+			Expected: []Step{},
 		},
 		"exclude double directory and extension wildcard": {
 			ChangedFiles: []string{
@@ -245,8 +244,7 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 					Step:  Step{Trigger: "txt"},
 				},
 			},
-			Expected: []Step{
-			},
+			Expected: []Step{},
 		},
 		"excluded file changed": {
 			ChangedFiles: []string{
@@ -254,12 +252,11 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 			},
 			WatchConfigs: []WatchConfig{
 				{
-					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt"},
 					Step:  Step{Trigger: "service-1"},
 				},
 			},
-			Expected: []Step{
-			},
+			Expected: []Step{},
 		},
 		"included and excluded files changed": {
 			ChangedFiles: []string{
@@ -270,11 +267,11 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 			},
 			WatchConfigs: []WatchConfig{
 				{
-					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt"},
 					Step:  Step{Trigger: "service-1"},
 				},
 				{
-					Paths: []string{"watch-path-1/*" },
+					Paths: []string{"watch-path-1/*"},
 					Step:  Step{Trigger: "service-2"},
 				},
 			},
@@ -289,11 +286,11 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 			},
 			WatchConfigs: []WatchConfig{
 				{
-					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt"},
 					Step:  Step{Trigger: "service-1"},
 				},
 				{
-					Paths: []string{"watch-path-1/*" },
+					Paths: []string{"watch-path-1/*"},
 					Step:  Step{Trigger: "service-2"},
 				},
 			},
@@ -308,7 +305,7 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 			},
 			WatchConfigs: []WatchConfig{
 				{
-					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**" },
+					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**"},
 					Step:  Step{Trigger: "service-1"},
 				},
 				{
@@ -327,7 +324,7 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 			},
 			WatchConfigs: []WatchConfig{
 				{
-					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**" },
+					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**"},
 					Step:  Step{Trigger: "service-1"},
 				},
 				{

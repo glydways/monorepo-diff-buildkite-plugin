@@ -127,13 +127,12 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 					}
 					if !match {
 						include_files = append(include_files, f)
-					} 
+					}
 				}
 			}
 		} else {
 			include_files = files
 		}
-
 
 		// Iterate over the filtered files for any matches
 		for _, i := range includes {
