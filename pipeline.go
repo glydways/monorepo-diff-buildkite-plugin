@@ -112,30 +112,40 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 			}
 		}
 
+		include_files := []string{}
 		// try to match the excludes
-		for _, e := range excludes {
-			str := e[1:]
-			for _, f := range files {
-				// If the file matches an exclude, move on to the next file.
-				match, err := matchPath(str, f)
+		if len(excludes) != 0 {
+			for _, e := range excludes {
+				if strings.HasPrefix(e, "!") {
+					e = e[1:]
+				}
+				for _, f := range files {
+					// If the file matches an exclude, move on to the next file.
+					match, err := matchPath(e, f)
+					if err != nil {
+						return nil, err
+					}
+					if !match {
+						include_files = append(include_files, f)
+					} 
+				}
+			}
+		} else {
+			include_files = files
+		}
+
+
+		// Iterate over the filtered files for any matches
+		for _, i := range includes {
+			for _, f := range include_files {
+				match, err := matchPath(i, f)
 				if err != nil {
 					return nil, err
 				}
+				// Add the step if an include was found
 				if match {
-					continue
-				} else {
-					// If no excludes were matched, try matching includes
-					for _, p := range includes {
-						match, err := matchPath(p, f)
-						if err != nil {
-							return nil, err
-						}
-						// Add the step if an include was found
-						if match {
-							steps = append(steps, w.Step)
-							break
-						}
-					}
+					steps = append(steps, w.Step)
+					break
 				}
 			}
 		}

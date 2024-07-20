@@ -222,6 +222,123 @@ func TestPipelinesStepsToTrigger(t *testing.T) {
 				{Trigger: "txt"},
 			},
 		},
+		"exclude extension wildcard in subdir": {
+			ChangedFiles: []string{
+				"docs/text.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"!docs/*.txt"},
+					Step:  Step{Trigger: "txt"},
+				},
+			},
+			Expected: []Step{
+			},
+		},
+		"exclude double directory and extension wildcard": {
+			ChangedFiles: []string{
+				"package/docs/other.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"!**/*.txt"},
+					Step:  Step{Trigger: "txt"},
+				},
+			},
+			Expected: []Step{
+			},
+		},
+		"excluded file changed": {
+			ChangedFiles: []string{
+				"watch-path-1/text2.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Step:  Step{Trigger: "service-1"},
+				},
+			},
+			Expected: []Step{
+			},
+		},
+		"included and excluded files changed": {
+			ChangedFiles: []string{
+				"watch-path-1/text1.txt",
+				"watch-path-1/text2.txt",
+				"watch-path-1/text3.txt",
+				"watch-path-1/text4.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Step:  Step{Trigger: "service-1"},
+				},
+				{
+					Paths: []string{"watch-path-1/*" },
+					Step:  Step{Trigger: "service-2"},
+				},
+			},
+			Expected: []Step{
+				{Trigger: "service-1"},
+				{Trigger: "service-2"},
+			},
+		},
+		"only excluded files changed": {
+			ChangedFiles: []string{
+				"watch-path-1/text2.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"watch-path-1/*", "!watch-path-1/text2.txt" },
+					Step:  Step{Trigger: "service-1"},
+				},
+				{
+					Paths: []string{"watch-path-1/*" },
+					Step:  Step{Trigger: "service-2"},
+				},
+			},
+			Expected: []Step{
+				{Trigger: "service-2"},
+			},
+		},
+		"included and excluded subdirectories changed": {
+			ChangedFiles: []string{
+				"watch-path-1/subdir1/text1.txt",
+				"watch-path-1/subdir2/text2.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**" },
+					Step:  Step{Trigger: "service-1"},
+				},
+				{
+					Paths: []string{"watch-path-1/**"},
+					Step:  Step{Trigger: "service-2"},
+				},
+			},
+			Expected: []Step{
+				{Trigger: "service-1"},
+				{Trigger: "service-2"},
+			},
+		},
+		"only excluded subdirectories changed": {
+			ChangedFiles: []string{
+				"watch-path-1/subdir2/text2.txt",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths: []string{"watch-path-1/**", "!watch-path-1/subdir2/**" },
+					Step:  Step{Trigger: "service-1"},
+				},
+				{
+					Paths: []string{"watch-path-1/**"},
+					Step:  Step{Trigger: "service-2"},
+				},
+			},
+			Expected: []Step{
+				{Trigger: "service-2"},
+			},
+		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
