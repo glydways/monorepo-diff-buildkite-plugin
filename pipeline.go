@@ -99,16 +99,43 @@ func diff(command string) ([]string, error) {
 func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 	steps := []Step{}
 
+	// Extract the includes and excludes
 	for _, w := range watch {
+		// Separate out excludes vs includes
+		includes := []string{}
+		excludes := []string{}
 		for _, p := range w.Paths {
+			if strings.HasPrefix(p, "!") {
+				excludes = append(excludes, p)
+			} else {
+				includes = append(includes, p)
+			}
+		}
+
+		// try to match the excludes
+		for _, e := range excludes {
+			str := e[1:]
 			for _, f := range files {
-				match, err := matchPath(p, f)
+				// If the file matches an exclude, move on to the next file.
+				match, err := matchPath(str, f)
 				if err != nil {
 					return nil, err
 				}
 				if match {
-					steps = append(steps, w.Step)
-					break
+					continue
+				} else {
+					// If no excludes were matched, try matching includes
+					for _, p := range includes {
+						match, err := matchPath(p, f)
+						if err != nil {
+							return nil, err
+						}
+						// Add the step if an include was found
+						if match {
+							steps = append(steps, w.Step)
+							break
+						}
+					}
 				}
 			}
 		}
