@@ -88,6 +88,7 @@ type Step struct {
 	TimeoutInMinutes interface{}              `json:"timeout_in_minutes" yaml:"timeout_in_minutes,omitempty"`
 	Parallelism      interface{}              `json:"parallelism" yaml:"parallelism,omitempty"`
 	Retry            interface{}              `json:"retry" yaml:"retry,omitempty"`
+	DependsOn        interface{}              `json:"depends_on" yaml:"depends_on,omitempty"`
 }
 
 // Agent is Buildkite agent definition
