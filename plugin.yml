@@ -52,6 +52,8 @@ configuration:
               type: [object, integer]
             timeout_in_minutes:
               type: [object, integer]
+            depends_on:
+              type: [object, string]
             notify:
               type: [array]
               properties:
