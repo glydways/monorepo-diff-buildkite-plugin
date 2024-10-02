@@ -9,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v2"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 )
 
@@ -96,6 +97,16 @@ func diff(command string) ([]string, error) {
 	return strings.Fields(strings.TrimSpace(output)), nil
 }
 
+// Remove an element from a slice by its value and return the resulting slice.
+func removeByValue(s []string, value string) []string {
+	for i, v := range s {
+		if v == value {
+			return append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
+}
+
 func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 	steps := []Step{}
 
@@ -117,10 +128,17 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		}
 
 		include_files := []string{}
+		exclude_files := []string{}
 		// try to match the excludes
 		if len(excludes) != 0 {
 			for _, f := range files {
 				for _, e := range excludes {
+					// if the file has already been excluded, don't check it again.
+					if slices.Contains(exclude_files, f) {
+						break
+					}
+
+					// Strip the preceeding ! to try to match
 					if strings.HasPrefix(e, "!") {
 						e = e[1:]
 					}
@@ -138,6 +156,8 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
 							fmt.Println("Excluding file.\n", f)
 						}
+						exclude_files = append(exclude_files, f)
+						include_files = removeByValue(include_files, f)
 						break
 					} else {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {

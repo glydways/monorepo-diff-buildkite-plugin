@@ -1,11 +1,12 @@
 module github.com/glydways/monorepo-diff-buildkite-plugin
 
-go 1.19
+go 1.23
 
 require (
 	github.com/bmatcuk/doublestar/v2 v2.0.4
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1
+	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
