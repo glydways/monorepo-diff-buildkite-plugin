@@ -135,6 +135,7 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 				for _, e := range excludes {
 					// if the file has already been excluded, don't check it again.
 					if slices.Contains(exclude_files, f) {
+						include_files = removeByValue(include_files, f)
 						break
 					}
 
