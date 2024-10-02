@@ -163,12 +163,16 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 					} else {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
 							fmt.Println("Pattern did not match.")
+							fmt.Println("Adding file to include_files: ", f)
 						}
 						include_files = append(include_files, f)
 					}
 				}
 			}
 		} else {
+			if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+				fmt.Println("Adding all files to include_files: ", files)
+			}
 			include_files = files
 		}
 
