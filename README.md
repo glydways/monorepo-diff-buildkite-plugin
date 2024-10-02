@@ -83,7 +83,7 @@ steps:
                 env:
                   - FOO=bar
                 plugins:
-                  - seek-oss/aws-sm#v2.6.3:
+                  - seek-oss/aws-sm#v2.3.1:
                     env:
                       AUTH_SECRET:
                         secret-id: "secret/id"

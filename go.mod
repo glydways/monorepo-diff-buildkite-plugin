@@ -1,6 +1,6 @@
 module github.com/glydways/monorepo-diff-buildkite-plugin
 
-go 1.22.0
+go 1.23
 
 toolchain go1.22.4
 
