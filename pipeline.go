@@ -97,6 +97,16 @@ func diff(command string) ([]string, error) {
 	return strings.Fields(strings.TrimSpace(output)), nil
 }
 
+// Remove an element from a slice by its value and return the resulting slice.
+func removeByValue(s []string, value string) []string {
+	for i, v := range s {
+		if v == value {
+			return append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
+}
+
 func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 	steps := []Step{}
 
@@ -147,6 +157,7 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 							fmt.Println("Excluding file.\n", f)
 						}
 						exclude_files = append(exclude_files, f)
+						include_files = removeByValue(include_files, f)
 						break
 					} else {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
