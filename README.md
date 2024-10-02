@@ -21,7 +21,7 @@ If the version number is not provided then the most recent version of the plugin
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.2:
+      - glydways/monorepo-diff#v2.6.3:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: "bar-service/"
@@ -38,7 +38,7 @@ steps:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.2:
+      - glydways/monorepo-diff#v2.6.3:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
           env:
@@ -83,7 +83,7 @@ steps:
                 env:
                   - FOO=bar
                 plugins:
-                  - seek-oss/aws-sm#v2.3.1:
+                  - seek-oss/aws-sm#v2.6.3:
                     env:
                       AUTH_SECRET:
                         secret-id: "secret/id"
@@ -162,7 +162,7 @@ Add `log_level` property to set the log level. Supported log levels are `debug` 
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.2:
+      - glydways/monorepo-diff#v2.6.3:
           diff: "git diff --name-only HEAD~1"
           log_level: "debug" # defaults to "info"
           watch:
@@ -238,7 +238,7 @@ hooks:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.2:
+      - glydways/monorepo-diff#v2.6.3:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: app/cms/
