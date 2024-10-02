@@ -134,8 +134,17 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 			for _, f := range files {
 				for _, e := range excludes {
 					// if the file has already been excluded, don't check it again.
+					if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+						fmt.Println("Checking if this file is already in the list of excludes: ", f)
+					}
 					if slices.Contains(exclude_files, f) {
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Excludes_files already contains this file, removing from include_files")
+						}
 						include_files = removeByValue(include_files, f)
+						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
+							fmt.Println("Include_files: ", include_files)
+						}
 						break
 					}
 
