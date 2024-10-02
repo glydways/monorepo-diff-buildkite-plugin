@@ -9,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v2"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 )
 
@@ -117,10 +118,17 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 		}
 
 		include_files := []string{}
+		exclude_files := []string{}
 		// try to match the excludes
 		if len(excludes) != 0 {
 			for _, f := range files {
 				for _, e := range excludes {
+					// if the file has already been excluded, don't check it again.
+					if slices.Contains(exclude_files, f) {
+						break
+					}
+
+					// Strip the preceeding ! to try to match
 					if strings.HasPrefix(e, "!") {
 						e = e[1:]
 					}
@@ -138,6 +146,7 @@ func stepsToTrigger(files []string, watch []WatchConfig) ([]Step, error) {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
 							fmt.Println("Excluding file.\n", f)
 						}
+						exclude_files = append(exclude_files, f)
 						break
 					} else {
 						if env("MONOREPO_DIFF_DEBUG", "") == "true" {
