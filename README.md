@@ -21,7 +21,7 @@ If the version number is not provided then the most recent version of the plugin
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5-alpha1:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: "bar-service/"
@@ -38,7 +38,7 @@ steps:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5-alpha1:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
           env:
@@ -166,7 +166,7 @@ pipeline regardless of changed paths).
 steps:
   - label: ":sparkles: trigger every pipeline"
     plugins:
-      - glydways/monorepo-diff#v2.6.5:
+      - glydways/monorepo-diff#v2.6.5-alpha1:
           watch:
             - path: "foo-service/"
               config:
@@ -184,7 +184,7 @@ Add `log_level` property to set the log level. Supported log levels are `debug` 
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5-alpha1:
           diff: "git diff --name-only HEAD~1"
           log_level: "debug" # defaults to "info"
           watch:
@@ -260,7 +260,7 @@ hooks:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5-alpha1:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: app/cms/
