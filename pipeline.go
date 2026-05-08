@@ -44,22 +44,32 @@ func (n PluginNotify) MarshalYAML() (interface{}, error) {
 type PipelineGenerator func(steps []Step, plugin Plugin) (*os.File, error)
 
 func uploadPipeline(plugin Plugin, generatePipeline PipelineGenerator) (string, []string, error) {
-	diffOutput, err := diff(plugin.Diff)
-	if err != nil {
-		log.Fatal(err)
-		return "", []string{}, err
-	}
+	var steps []Step
 
-	if len(diffOutput) < 1 {
-		log.Info("No changes detected. Skipping pipeline upload.")
-		return "", []string{}, nil
-	}
+	if env("MONOREPO_DIFF_TRIGGER_ALL", "") == "true" {
+		log.Info("MONOREPO_DIFF_TRIGGER_ALL=true — emitting every watched step, skipping diff")
+		steps = make([]Step, 0, len(plugin.Watch))
+		for _, w := range plugin.Watch {
+			steps = append(steps, w.Step)
+		}
+	} else {
+		diffOutput, err := diff(plugin.Diff)
+		if err != nil {
+			log.Fatal(err)
+			return "", []string{}, err
+		}
 
-	log.Debug("Output from diff: \n" + strings.Join(diffOutput, "\n"))
+		if len(diffOutput) < 1 {
+			log.Info("No changes detected. Skipping pipeline upload.")
+			return "", []string{}, nil
+		}
 
-	steps, err := stepsToTrigger(diffOutput, plugin.Watch)
-	if err != nil {
-		return "", []string{}, err
+		log.Debug("Output from diff: \n" + strings.Join(diffOutput, "\n"))
+
+		steps, err = stepsToTrigger(diffOutput, plugin.Watch)
+		if err != nil {
+			return "", []string{}, err
+		}
 	}
 
 	pipeline, err := generatePipeline(steps, plugin)

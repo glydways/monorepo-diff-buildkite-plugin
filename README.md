@@ -21,7 +21,7 @@ If the version number is not provided then the most recent version of the plugin
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: "bar-service/"
@@ -38,7 +38,7 @@ steps:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
           env:
@@ -154,6 +154,28 @@ to avoid trying to interpolate the commit message, which can cause failures.
 
 The object values provided in this configuration will be appended to `env` property of all steps or commands.
 
+## `MONOREPO_DIFF_TRIGGER_ALL` (env var)
+
+When set to `"true"` in the build environment, the plugin skips the `diff` step
+and emits one trigger/command step per entry in `watch:`. Useful for scheduled
+fan-out builds (e.g. an hourly health check that exercises every downstream
+pipeline regardless of changed paths).
+
+```yaml
+# Schedule this build with env: MONOREPO_DIFF_TRIGGER_ALL=true
+steps:
+  - label: ":sparkles: trigger every pipeline"
+    plugins:
+      - glydways/monorepo-diff#v2.6.5:
+          watch:
+            - path: "foo-service/"
+              config:
+                trigger: "deploy-foo"
+            - path: "bar-service/"
+              config:
+                trigger: "deploy-bar"
+```
+
 ## `log_level` (optional)
 
 Add `log_level` property to set the log level. Supported log levels are `debug` and `info`. Defaults to `info`.
@@ -162,7 +184,7 @@ Add `log_level` property to set the log level. Supported log levels are `debug` 
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5:
           diff: "git diff --name-only HEAD~1"
           log_level: "debug" # defaults to "info"
           watch:
@@ -238,7 +260,7 @@ hooks:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.4:
+      - glydways/monorepo-diff#v2.6.5:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: app/cms/

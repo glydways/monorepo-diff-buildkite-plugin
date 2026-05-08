@@ -52,6 +52,40 @@ steps:
 EOM
 }
 
+@test "MONOREPO_DIFF_TRIGGER_ALL emits every watched step and skips diff" {
+  export MONOREPO_DIFF_TRIGGER_ALL="true"
+
+  # diff is intentionally a failing command — if it ran, the build would fail.
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "exit 1",
+      "log_level": "debug",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": { "trigger": "foo-pipeline" }
+        },
+        {
+          "path": "bar-service/",
+          "config": { "trigger": "bar-pipeline" }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+  assert_output --partial "MONOREPO_DIFF_TRIGGER_ALL=true"
+  assert_output --partial << EOM
+steps:
+- trigger: foo-pipeline
+EOM
+  assert_output --partial << EOM
+- trigger: bar-pipeline
+EOM
+}
+
 @test "Pipeline is generated with notifications" {
   export BUILDKITE_BRANCH="go-rewrite"
   export BUILDKITE_MESSAGE="some message"

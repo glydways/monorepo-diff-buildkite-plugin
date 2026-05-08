@@ -43,6 +43,35 @@ func TestUploadPipelineCancelsIfThereIsNoDiffOutput(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
+func TestUploadPipelineTriggerAllSkipsDiffAndEmitsAllWatches(t *testing.T) {
+	t.Setenv("MONOREPO_DIFF_TRIGGER_ALL", "true")
+
+	var captured []Step
+	gen := func(steps []Step, plugin Plugin) (*os.File, error) {
+		captured = steps
+		f, _ := os.Create("pipeline.txt")
+		defer f.Close()
+		return f, nil
+	}
+
+	plugin := Plugin{
+		Diff: "false", // would fail if executed; proves we skip diff
+		Watch: []WatchConfig{
+			{Paths: []string{"a/"}, Step: Step{Trigger: "svc-a"}},
+			{Paths: []string{"b/"}, Step: Step{Trigger: "svc-b"}},
+		},
+	}
+
+	_, _, err := uploadPipeline(plugin, gen)
+
+	// Only error expected is from missing buildkite-agent binary, not from diff.
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "buildkite-agent")
+	require.Len(t, captured, 2)
+	assert.Equal(t, "svc-a", captured[0].Trigger)
+	assert.Equal(t, "svc-b", captured[1].Trigger)
+}
+
 func TestDiff(t *testing.T) {
 	want := []string{
 		"services/foo/serverless.yml",
