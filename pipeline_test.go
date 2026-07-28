@@ -393,6 +393,11 @@ func TestGeneratePipeline(t *testing.T) {
 				{GithubStatus: GithubStatusNotification{Context: "my-custom-status"}},
 				{Slack: "@someuser", Condition: "build.state === \"passed\""},
 			},
+			// float64 is what json.Unmarshal produces for a plugin config
+			// `"concurrency": 2`, so assert on that rather than an int literal.
+			Concurrency:       float64(2),
+			ConcurrencyGroup:  "payments/deploy",
+			ConcurrencyMethod: "eager",
 		},
 		{
 			Group:   "my group",
@@ -451,6 +456,9 @@ steps:
       context: my-custom-status
   - slack: '@someuser'
     if: build.state === "passed"
+  concurrency: 2
+  concurrency_group: payments/deploy
+  concurrency_method: eager
 - group: my group
   steps:
   - trigger: foo-service-pipeline

@@ -54,6 +54,12 @@ configuration:
               type: [object, integer]
             depends_on:
               type: [object, string]
+            concurrency:
+              type: [string, integer]
+            concurrency_group:
+              type: string
+            concurrency_method:
+              type: string
             notify:
               type: [array]
               properties:
