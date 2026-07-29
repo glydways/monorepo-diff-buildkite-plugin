@@ -118,6 +118,12 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 		Interpolation: true,
 	}
 
+	// TODO: consider returning this error instead of discarding it. A wrongly
+	// typed value is currently dropped silently — `concurrency: "1"` decodes to
+	// 0 and the step ends up with no limit at all. Going strict surfaces those
+	// typos at parse time, but it would start failing builds for downstream
+	// users whose configs carry wrongly typed values that are ignored today, so
+	// it needs a heads-up and a major version bump.
 	_ = json.Unmarshal(data, def)
 
 	*plugin = Plugin(*def)
