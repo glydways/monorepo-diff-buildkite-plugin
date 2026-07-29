@@ -13,6 +13,8 @@ configuration:
       type: boolean
     env:
       type: array
+    plugins:
+      type: [array, object]
     notify:
       type: [array]
       properties:
@@ -43,11 +45,21 @@ configuration:
           type: object
           properties:
             command:
-              type: string
+              type: [string, array]
+            commands:
+              type: [string, array]
             trigger:
               type: string
+            group:
+              type: string
+            key:
+              type: string
+            identifier:
+              type: string
             soft_fail:
-              type: [object, boolean]
+              type: [array, object, boolean]
+            retry:
+              type: object
             parallelism:
               type: [object, integer]
             timeout_in_minutes:
@@ -103,6 +115,8 @@ configuration:
               type: array
             env:
               type: array
+            plugins:
+              type: [array, object]
     wait:
       type: boolean
     hooks:
