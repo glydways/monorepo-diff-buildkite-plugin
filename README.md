@@ -292,39 +292,6 @@ Using commands, it is also possible to use this to upload other pipeline definit
     command: "buildkite-agent pipeline upload ./backend/.buildkite/pipeline.yaml"
 ```
 
-### `concurrency` (optional)
-
-Limits how many jobs from the generated step run at the same time. See
-[controlling concurrency](https://buildkite.com/docs/pipelines/configure/workflows/controlling-concurrency).
-
-- `concurrency` — maximum number of jobs that may run simultaneously.
-- `concurrency_group` — the label the limit is applied to. Steps in other pipelines using the
-  same group share the limit. **Required whenever `concurrency` is set**, otherwise Buildkite
-  rejects the step with `missing concurrency_group_id`.
-- `concurrency_method` — `ordered` (default, jobs run in the order they were created) or
-  `eager` (jobs fill free slots regardless of order).
-
-```yaml
-steps:
-  - label: "Triggering pipelines"
-    plugins:
-      - glydways/monorepo-diff#v2.6.6:
-          diff: "git diff --name-only HEAD~1"
-          watch:
-            - path: "payments/"
-              config:
-                command: "deploy.sh"
-                label: ":rocket: Deploy payments"
-                concurrency: 1
-                concurrency_group: "payments/deploy"
-            - path: "tests/"
-              config:
-                command: "run-tests.sh"
-                concurrency: 10
-                concurrency_group: "saucelabs"
-                concurrency_method: eager
-```
-
 ## How to Contribute
 
 Please read [contributing guide](https://github.com/glydways/monorepo-diff-buildkite-plugin/blob/master/CONTRIBUTING.md).

@@ -206,7 +206,7 @@ func TestPluginShouldUnmarshallCorrectly(t *testing.T) {
 						"hi":   "bye",
 					},
 					SoftFail:          []interface{}{map[string]interface{}{"exit_status": "*"}},
-					Concurrency:       float64(1),
+					Concurrency:       1,
 					ConcurrencyGroup:  "payments/deploy",
 					ConcurrencyMethod: "eager",
 					Notify: []StepNotify{

@@ -55,11 +55,12 @@ configuration:
             depends_on:
               type: [object, string]
             concurrency:
-              type: [string, integer]
+              type: integer
             concurrency_group:
               type: string
             concurrency_method:
               type: string
+              enum: [ordered, eager]
             notify:
               type: [array]
               properties:
