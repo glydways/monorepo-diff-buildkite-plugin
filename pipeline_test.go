@@ -393,6 +393,9 @@ func TestGeneratePipeline(t *testing.T) {
 				{GithubStatus: GithubStatusNotification{Context: "my-custom-status"}},
 				{Slack: "@someuser", Condition: "build.state === \"passed\""},
 			},
+			Concurrency:       2,
+			ConcurrencyGroup:  "payments/deploy",
+			ConcurrencyMethod: "eager",
 		},
 		{
 			Group:   "my group",
@@ -451,6 +454,9 @@ steps:
       context: my-custom-status
   - slack: '@someuser'
     if: build.state === "passed"
+  concurrency: 2
+  concurrency_group: payments/deploy
+  concurrency_method: eager
 - group: my group
   steps:
   - trigger: foo-service-pipeline

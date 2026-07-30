@@ -89,6 +89,9 @@ func TestPluginShouldUnmarshallCorrectly(t *testing.T) {
 						"env": [
 							"env4", "hi= bye"
 						],
+						"concurrency": 1,
+						"concurrency_group": "payments/deploy",
+						"concurrency_method": "eager",
 						"soft_fail": [{
 							"exit_status": "*"
 						}],
@@ -202,7 +205,10 @@ func TestPluginShouldUnmarshallCorrectly(t *testing.T) {
 						"env4": "env-4",
 						"hi":   "bye",
 					},
-					SoftFail: []interface{}{map[string]interface{}{"exit_status": "*"}},
+					SoftFail:          []interface{}{map[string]interface{}{"exit_status": "*"}},
+					Concurrency:       1,
+					ConcurrencyGroup:  "payments/deploy",
+					ConcurrencyMethod: "eager",
 					Notify: []StepNotify{
 						{Basecamp: "https://basecamp-url"},
 						{GithubStatus: GithubStatusNotification{Context: "my-custom-status"}},

@@ -68,27 +68,30 @@ type StepNotify struct {
 
 // Step is buildkite pipeline definition
 type Step struct {
-	Group            string                   `yaml:"group,omitempty"`
-	Trigger          string                   `yaml:"trigger,omitempty"`
-	Label            string                   `yaml:"label,omitempty"`
-	Key              string                   `yaml:"key,omitempty"`
-	Identifier       string                   `yaml:"identifier,omitempty"`
-	Build            Build                    `yaml:"build,omitempty"`
-	Command          interface{}              `yaml:"command,omitempty"`
-	Commands         interface{}              `yaml:"commands,omitempty"`
-	Agents           Agent                    `yaml:"agents,omitempty"`
-	Artifacts        []string                 `yaml:"artifacts,omitempty"`
-	RawEnv           interface{}              `json:"env" yaml:",omitempty"`
-	Env              map[string]string        `yaml:"env,omitempty"`
-	Async            bool                     `yaml:"async,omitempty"`
-	SoftFail         interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
-	RawNotify        []map[string]interface{} `json:"notify" yaml:",omitempty"`
-	Notify           []StepNotify             `yaml:"notify,omitempty"`
-	Plugins          interface{}              `yaml:"plugins,omitempty"`
-	TimeoutInMinutes interface{}              `json:"timeout_in_minutes" yaml:"timeout_in_minutes,omitempty"`
-	Parallelism      interface{}              `json:"parallelism" yaml:"parallelism,omitempty"`
-	Retry            interface{}              `json:"retry" yaml:"retry,omitempty"`
-	DependsOn        interface{}              `json:"depends_on" yaml:"depends_on,omitempty"`
+	Group             string                   `yaml:"group,omitempty"`
+	Trigger           string                   `yaml:"trigger,omitempty"`
+	Label             string                   `yaml:"label,omitempty"`
+	Key               string                   `yaml:"key,omitempty"`
+	Identifier        string                   `yaml:"identifier,omitempty"`
+	Build             Build                    `yaml:"build,omitempty"`
+	Command           interface{}              `yaml:"command,omitempty"`
+	Commands          interface{}              `yaml:"commands,omitempty"`
+	Agents            Agent                    `yaml:"agents,omitempty"`
+	Artifacts         []string                 `yaml:"artifacts,omitempty"`
+	RawEnv            interface{}              `json:"env" yaml:",omitempty"`
+	Env               map[string]string        `yaml:"env,omitempty"`
+	Async             bool                     `yaml:"async,omitempty"`
+	SoftFail          interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
+	RawNotify         []map[string]interface{} `json:"notify" yaml:",omitempty"`
+	Notify            []StepNotify             `yaml:"notify,omitempty"`
+	Plugins           interface{}              `yaml:"plugins,omitempty"`
+	TimeoutInMinutes  interface{}              `json:"timeout_in_minutes" yaml:"timeout_in_minutes,omitempty"`
+	Parallelism       interface{}              `json:"parallelism" yaml:"parallelism,omitempty"`
+	Retry             interface{}              `json:"retry" yaml:"retry,omitempty"`
+	DependsOn         interface{}              `json:"depends_on" yaml:"depends_on,omitempty"`
+	Concurrency       int                      `json:"concurrency" yaml:"concurrency,omitempty"`
+	ConcurrencyGroup  string                   `json:"concurrency_group" yaml:"concurrency_group,omitempty"`
+	ConcurrencyMethod string                   `json:"concurrency_method" yaml:"concurrency_method,omitempty"`
 }
 
 // Agent is Buildkite agent definition
@@ -115,6 +118,12 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 		Interpolation: true,
 	}
 
+	// TODO: consider returning this error instead of discarding it. A wrongly
+	// typed value is currently dropped silently — `concurrency: "1"` decodes to
+	// 0 and the step ends up with no limit at all. Going strict surfaces those
+	// typos at parse time, but it would start failing builds for downstream
+	// users whose configs carry wrongly typed values that are ignored today, so
+	// it needs a heads-up and a major version bump.
 	_ = json.Unmarshal(data, def)
 
 	*plugin = Plugin(*def)

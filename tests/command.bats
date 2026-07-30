@@ -86,6 +86,38 @@ EOM
 EOM
 }
 
+@test "Pipeline is generated with concurrency config" {
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "echo foo-service/",
+      "log_level": "debug",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": {
+            "command": "deploy.sh",
+            "concurrency": 1,
+            "concurrency_group": "payments/deploy",
+            "concurrency_method": "eager"
+          }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+
+  assert_output --partial << EOM
+steps:
+- command: deploy.sh
+  concurrency: 1
+  concurrency_group: payments/deploy
+  concurrency_method: eager
+EOM
+}
+
 @test "Pipeline is generated with notifications" {
   export BUILDKITE_BRANCH="go-rewrite"
   export BUILDKITE_MESSAGE="some message"
