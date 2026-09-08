@@ -21,7 +21,7 @@ If the version number is not provided then the most recent version of the plugin
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.6:
+      - glydways/monorepo-diff#v2.6.7:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: "bar-service/"
@@ -38,7 +38,7 @@ steps:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.6:
+      - glydways/monorepo-diff#v2.6.7:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
           env:
@@ -94,6 +94,10 @@ steps:
               config:
                 trigger: "deploy-foo-service"
                 label: "Triggered deploy"
+                if: build.pull_request.base_branch == "main"
+                branches:
+                  - main
+                  - "release/*"
                 build:
                   message: "Deploying foo service"
                   meta_data:
@@ -168,7 +172,7 @@ pipeline regardless of changed paths).
 steps:
   - label: ":sparkles: trigger every pipeline"
     plugins:
-      - glydways/monorepo-diff#v2.6.6:
+      - glydways/monorepo-diff#v2.6.7:
           watch:
             - path: "foo-service/"
               config:
@@ -186,7 +190,7 @@ Add `log_level` property to set the log level. Supported log levels are `debug` 
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.6:
+      - glydways/monorepo-diff#v2.6.7:
           diff: "git diff --name-only HEAD~1"
           log_level: "debug" # defaults to "info"
           watch:
@@ -240,6 +244,75 @@ By default, it will pass the following values to the `build` attributes unless a
       branch: $BUILDKITE_BRANCH
 ```
 
+Note that only `message`, `branch` and `commit` are carried over. Nothing else about
+the current build — pull request number, base branch, source — reaches the triggered
+build, because Buildkite creates it through the API with no pull request association.
+Pass anything else you need explicitly via `build.env` or `build.meta_data`:
+
+```yaml
+- path: app/cms/
+  config:
+    trigger: cms-deploy
+    build:
+      env:
+        # A bare key takes its value from the current build's environment.
+        - BUILDKITE_PULL_REQUEST
+        - BUILDKITE_PULL_REQUEST_BASE_BRANCH
+        - BUILDKITE_PULL_REQUEST_REPO
+      meta_data:
+        release_channel: "stable"
+```
+
+`build.env` is a list of `KEY=value` strings (or bare `KEY` to inherit), while
+`build.meta_data` is a map. Note that these env vars are visible to the triggered
+build's scripts but do not give it a real pull request association, so downstream
+`if:` expressions on `build.pull_request.*` still will not resolve.
+
+#### `if` and `branches` (optional)
+
+Both step types accept the standard Buildkite conditionals, letting you gate an
+individual watch entry on top of its path match.
+
+```yaml
+- path: app/cms/
+  config:
+    trigger: cms-deploy
+    # Only trigger when the pull request targets main.
+    if: build.pull_request.base_branch == "main"
+- path: app/api/
+  config:
+    trigger: api-deploy
+    # `branches` accepts a single branch or a list, and matches the *current*
+    # branch (BUILDKITE_BRANCH) — not the pull request base branch.
+    branches:
+      - main
+      - "release/*"
+```
+
+See [conditionals](https://buildkite.com/docs/pipelines/conditionals) and
+[branch configuration](https://buildkite.com/docs/pipelines/branch-configuration)
+for the supported syntax.
+
+These are evaluated by Buildkite on the *generated* step, in the build running the
+plugin, so `build.pull_request.base_branch` still resolves here. Put the condition
+on the watch entry rather than in the triggered pipeline — once the downstream build
+starts, its pull request context is gone.
+
+To gate every watch entry at once, put the condition on the step that runs the
+plugin instead:
+
+```yaml
+steps:
+  - label: "Triggering pipelines"
+    if: build.pull_request.base_branch == "main"
+    plugins:
+      - glydways/monorepo-diff#v2.6.7:
+          watch:
+            - path: "app/cms/"
+              config:
+                trigger: "cms-deploy"
+```
+
 ### `wait` (optional)
 
 Default: `true`
@@ -262,7 +335,7 @@ hooks:
 steps:
   - label: "Triggering pipelines"
     plugins:
-      - glydways/monorepo-diff#v2.6.6:
+      - glydways/monorepo-diff#v2.6.7:
           diff: "git diff --name-only HEAD~1"
           watch:
             - path: app/cms/

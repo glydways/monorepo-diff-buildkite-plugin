@@ -89,6 +89,8 @@ type Step struct {
 	Parallelism       interface{}              `json:"parallelism" yaml:"parallelism,omitempty"`
 	Retry             interface{}              `json:"retry" yaml:"retry,omitempty"`
 	DependsOn         interface{}              `json:"depends_on" yaml:"depends_on,omitempty"`
+	Condition         string                   `json:"if" yaml:"if,omitempty"`
+	Branches          interface{}              `json:"branches" yaml:"branches,omitempty"`
 	Concurrency       int                      `json:"concurrency" yaml:"concurrency,omitempty"`
 	ConcurrencyGroup  string                   `json:"concurrency_group" yaml:"concurrency_group,omitempty"`
 	ConcurrencyMethod string                   `json:"concurrency_method" yaml:"concurrency_method,omitempty"`
