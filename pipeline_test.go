@@ -402,6 +402,15 @@ func TestGeneratePipeline(t *testing.T) {
 			Trigger: "foo-service-pipeline",
 			Build:   Build{Message: "build message"},
 		},
+		{
+			Trigger:   "conditional-service-pipeline",
+			Condition: `build.pull_request.base_branch == "main"`,
+			Branches:  []string{"main", "release/*"},
+		},
+		{
+			Trigger:  "branch-string-pipeline",
+			Branches: "main",
+		},
 	}
 
 	plugin := Plugin{
@@ -462,6 +471,13 @@ steps:
   - trigger: foo-service-pipeline
     build:
       message: build message
+- trigger: conditional-service-pipeline
+  if: build.pull_request.base_branch == "main"
+  branches:
+  - main
+  - release/*
+- trigger: branch-string-pipeline
+  branches: main
 - wait: null
 - command: echo "hello world"
 - command: cat ./file.txt

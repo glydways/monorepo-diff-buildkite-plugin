@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.7]
+
+### Added
+- `if` and `branches` step attributes, for gating an individual watch entry on top of its
+  path match. `if` takes a Buildkite conditional expression, `branches` a single branch or
+  a list. Both are evaluated in the build running the plugin, so `build.pull_request.*` is
+  still available to them — unlike in the triggered build, which has no pull request
+  association. See https://buildkite.com/docs/pipelines/conditionals
+
 ## [2.6.6]
 
 ### Added

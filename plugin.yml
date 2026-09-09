@@ -66,6 +66,10 @@ configuration:
               type: [object, integer]
             depends_on:
               type: [object, string]
+            if:
+              type: string
+            branches:
+              type: [string, array]
             concurrency:
               type: integer
             concurrency_group:

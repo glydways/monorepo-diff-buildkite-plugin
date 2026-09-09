@@ -114,6 +114,8 @@ func TestPluginShouldUnmarshallCorrectly(t *testing.T) {
 					"config": {
 						"trigger": "service-1",
 						"label": "hello",
+						"if": "build.pull_request.base_branch == \"main\"",
+						"branches": ["main", "release/*"],
 						"build": {
 							"message": "build message",
 							"branch": "current branch",
@@ -234,6 +236,8 @@ func TestPluginShouldUnmarshallCorrectly(t *testing.T) {
 						},
 					},
 					Async:     true,
+					Condition: `build.pull_request.base_branch == "main"`,
+					Branches:  []interface{}{"main", "release/*"},
 					Agents:    map[string]string{"queue": "queue-1", "database": "postgres"},
 					Artifacts: []string{"artifiact-1"},
 					SoftFail: []interface{}{map[string]interface{}{
