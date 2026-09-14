@@ -364,3 +364,45 @@ steps:
 - command: cat ./foo-file.txt
 EOM
 }
+
+@test "Binary is downloaded from GitHub releases by default" {
+  unset MONOREPO_DIFF_BINARY_BASE_URL
+
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "echo foo-service/",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": { "trigger": "foo-service" }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+  assert_output --partial "downloading https://github.com/glydways/monorepo-diff-buildkite-plugin/releases/latest/download/monorepo-diff-buildkite-plugin_"
+}
+
+@test "MONOREPO_DIFF_BINARY_BASE_URL overrides the download location" {
+  export MONOREPO_DIFF_BINARY_BASE_URL="https://cache.example.com/glydways/monorepo-diff-buildkite-plugin"
+
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin#v2.6.7": {
+      "diff": "echo foo-service/",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": { "trigger": "foo-service" }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+  assert_output --partial "downloading https://cache.example.com/glydways/monorepo-diff-buildkite-plugin/releases/download/v2.6.7/monorepo-diff-buildkite-plugin_"
+}
