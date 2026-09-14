@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.8]
+
+### Added
+- `MONOREPO_DIFF_BINARY_BASE_URL` environment variable, overriding the base URL the
+  `command` hook downloads the plugin binary from. Defaults to the GitHub release URL,
+  so behavior is unchanged when it is unset.
+
 ## [2.6.7]
 
 ### Added
