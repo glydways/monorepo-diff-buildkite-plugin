@@ -75,7 +75,8 @@ download_binary_and_run() {
   get_architecture || return 1
   local _arch="$RETVAL"
   local _executable="monorepo-diff-buildkite-plugin"
-  local _repo="https://github.com/glydways/monorepo-diff-buildkite-plugin"
+  # Agents point this at an internal caching proxy to avoid github.com 504s.
+  local _repo="${MONOREPO_DIFF_BINARY_BASE_URL:-https://github.com/glydways/monorepo-diff-buildkite-plugin}"
 
   get_version || return 1
   local _version="$RETVAL"
@@ -85,6 +86,8 @@ download_binary_and_run() {
   else
     _url=${_repo}/releases/download/${_version:1}/${_executable}_${_arch}
   fi
+
+  say "downloading ${_url}"
 
   local test_mode="${BUILDKITE_PLUGIN_MONOREPO_DIFF_BUILDKITE_PLUGIN_TEST_MODE:-false}"
 

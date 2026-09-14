@@ -182,6 +182,14 @@ steps:
                 trigger: "deploy-bar"
 ```
 
+## `MONOREPO_DIFF_BINARY_BASE_URL` (env var)
+
+Base URL the `command` hook downloads the plugin binary from, so agents can
+point at an internal caching proxy instead of github.com. Defaults to
+`https://github.com/glydways/monorepo-diff-buildkite-plugin`; the
+`releases/latest/download/...` and `releases/download/<version>/...` paths are
+appended to whatever is set.
+
 ## `log_level` (optional)
 
 Add `log_level` property to set the log level. Supported log levels are `debug` and `info`. Defaults to `info`.
