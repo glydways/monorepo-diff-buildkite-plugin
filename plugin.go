@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -160,7 +162,9 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 			setNotify(&plugin.Watch[i].Step.Notify, &plugin.Watch[i].Step.RawNotify)
 		}
 
-		appendEnv(&plugin.Watch[i], plugin.Env)
+		if err := appendEnv(&plugin.Watch[i], plugin.Env); err != nil {
+			return err
+		}
 
 		p.RawPath = nil
 	}
@@ -293,9 +297,14 @@ func setBuild(build *Build) {
 }
 
 // appends top level env to Step.Env and Step.Build.Env
-func appendEnv(watch *WatchConfig, env map[string]string) {
-	watch.Step.Env, _ = parseEnv(watch.Step.RawEnv)
-	watch.Step.Build.Env, _ = parseEnv(watch.Step.Build.RawEnv)
+func appendEnv(watch *WatchConfig, env map[string]string) error {
+	var err error
+	if watch.Step.Env, err = parseEnv(watch.Step.RawEnv); err != nil {
+		return err
+	}
+	if watch.Step.Build.Env, err = parseEnv(watch.Step.Build.RawEnv); err != nil {
+		return err
+	}
 
 	for key, value := range env {
 		if watch.Step.Command != nil || watch.Step.Commands != nil {
@@ -319,32 +328,62 @@ func appendEnv(watch *WatchConfig, env map[string]string) {
 	watch.Step.RawEnv = nil
 	watch.Step.Build.RawEnv = nil
 	watch.RawPath = nil
+	return nil
 }
 
-// parse env in format from env=env-value to map[env] = env-value
+// parse env from either a list of KEY=value strings or a KEY: value map.
+// A bare KEY (or a null map value) takes its value from the agent environment.
 func parseEnv(raw interface{}) (map[string]string, error) {
-	if raw == nil {
+	switch entries := raw.(type) {
+	case nil:
 		return nil, nil
-	}
+	case map[string]interface{}:
+		result := make(map[string]string, len(entries))
+		for key, value := range entries {
+			parsed, err := parseEnvValue(key, value)
+			if err != nil {
+				return nil, err
+			}
+			result[strings.TrimSpace(key)] = parsed
+		}
+		return result, nil
+	case []interface{}:
+		result := make(map[string]string, len(entries))
+		for _, entry := range entries {
+			pair, ok := entry.(string)
+			if !ok {
+				return nil, fmt.Errorf("failed to parse plugin configuration: env entry %v is not a string", entry)
+			}
 
-	if _, ok := raw.([]interface{}); ok != true {
+			key, value, hasValue := strings.Cut(pair, "=")
+			key = strings.TrimSpace(key)
+			if key == "" {
+				continue
+			}
+
+			if !hasValue {
+				result[key] = env(key, "")
+				continue
+			}
+			result[key] = strings.TrimSpace(value)
+		}
+		return result, nil
+	default:
 		return nil, errors.New("failed to parse plugin configuration")
 	}
+}
 
-	result := make(map[string]string)
-	for _, v := range raw.([]interface{}) {
-		split := strings.Split(v.(string), "=")
-		key, value := strings.TrimSpace(split[0]), split[1:]
-
-		// only key exists. set value from env
-		if len(key) > 0 && len(value) == 0 {
-			result[key] = env(key, "")
-		}
-
-		if len(value) > 0 {
-			result[key] = strings.TrimSpace(value[0])
-		}
+func parseEnvValue(key string, value interface{}) (string, error) {
+	switch v := value.(type) {
+	case nil:
+		return env(key, ""), nil
+	case string:
+		return v, nil
+	case bool:
+		return strconv.FormatBool(v), nil
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	default:
+		return "", fmt.Errorf("failed to parse plugin configuration: env %s must be a scalar, got %T", key, value)
 	}
-
-	return result, nil
 }

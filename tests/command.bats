@@ -365,6 +365,89 @@ steps:
 EOM
 }
 
+@test "Pipeline is generated with map env on a command step" {
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "echo foo-service/",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": {
+            "command": "echo foo",
+            "env": { "OWNER_SLACK_GROUP": "@data-platform-triage", "PRIORITY": -1 }
+          }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+  assert_output --partial << EOM
+- command: echo foo
+  env:
+    OWNER_SLACK_GROUP: '@data-platform-triage'
+    PRIORITY: "-1"
+EOM
+}
+
+@test "Pipeline is generated with map env on a trigger build" {
+  export BUILDKITE_BRANCH="some-branch"
+  export BUILDKITE_MESSAGE="some message"
+  export BUILDKITE_COMMIT="commit-hash"
+
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "echo foo-service/",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": {
+            "trigger": "foo-pipeline",
+            "build": { "env": { "JOB_FILTER": "atp_unit_tests" } }
+          }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_success
+  assert_output --partial << EOM
+- trigger: foo-pipeline
+  build:
+    message: some message
+    branch: some-branch
+    commit: commit-hash
+    env:
+      JOB_FILTER: atp_unit_tests
+EOM
+}
+
+@test "Notify when a watched step env value is not a scalar" {
+  export BUILDKITE_PLUGINS='[{
+    "github.com/glydways/monorepo-diff-buildkite-plugin": {
+      "diff": "echo foo-service/",
+      "watch": [
+        {
+          "path": "foo-service/",
+          "config": {
+            "command": "echo foo",
+            "env": { "FOO": { "nested": "value" } }
+          }
+        }
+      ]
+    }
+  }]'
+
+  run $PWD/hooks/command
+
+  assert_failure
+  assert_output --partial "failed to parse plugin configuration"
+}
+
 @test "Binary is downloaded from GitHub releases by default" {
   unset MONOREPO_DIFF_BINARY_BASE_URL
 
