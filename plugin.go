@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,7 +21,7 @@ type Plugin struct {
 	Interpolation bool
 	Hooks         []HookConfig
 	Watch         []WatchConfig
-	RawEnv        interface{} `json:"env"`
+	RawEnv        json.RawMessage `json:"env"`
 	Env           map[string]string
 	RawNotify     []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify        []PluginNotify           `yaml:"notify,omitempty"`
@@ -80,7 +81,7 @@ type Step struct {
 	Commands          interface{}              `yaml:"commands,omitempty"`
 	Agents            Agent                    `yaml:"agents,omitempty"`
 	Artifacts         []string                 `yaml:"artifacts,omitempty"`
-	RawEnv            interface{}              `json:"env" yaml:",omitempty"`
+	RawEnv            json.RawMessage          `json:"env" yaml:",omitempty"`
 	Env               map[string]string        `yaml:"env,omitempty"`
 	Async             bool                     `yaml:"async,omitempty"`
 	SoftFail          interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
@@ -106,7 +107,7 @@ type Build struct {
 	Message  string            `yaml:"message,omitempty"`
 	Branch   string            `yaml:"branch,omitempty"`
 	Commit   string            `yaml:"commit,omitempty"`
-	RawEnv   interface{}       `json:"env" yaml:",omitempty"`
+	RawEnv   json.RawMessage   `json:"env" yaml:",omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`
 	MetaData map[string]string `json:"meta_data,omitempty" yaml:"meta_data,omitempty"`
 }
@@ -333,8 +334,20 @@ func appendEnv(watch *WatchConfig, env map[string]string) error {
 
 // parseEnv interprets either a list of "KEY=value" strings or a mapping entry pair as a set of environment variable bindings.
 // A bare KEY (or a null map value) takes its value from the agent environment.
-func parseEnv(raw interface{}) (map[string]string, error) {
-	switch entries := raw.(type) {
+func parseEnv(raw json.RawMessage) (map[string]string, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+
+	// UseNumber keeps numeric values as written instead of rounding them through float64.
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var decoded interface{}
+	if err := decoder.Decode(&decoded); err != nil {
+		return nil, fmt.Errorf("failed to parse plugin configuration: %w", err)
+	}
+
+	switch entries := decoded.(type) {
 	case nil:
 		return nil, nil
 	case map[string]interface{}:
@@ -383,8 +396,8 @@ func parseEnvValue(key string, value interface{}) (string, error) {
 		return v, nil
 	case bool:
 		return strconv.FormatBool(v), nil
-	case float64:
-		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	case json.Number:
+		return v.String(), nil
 	default:
 		return "", fmt.Errorf("failed to parse plugin configuration: environment value %q must be a scalar, got %T", key, value)
 	}

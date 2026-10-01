@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -333,25 +334,25 @@ func TestParseEnv(t *testing.T) {
 
 	tests := []struct {
 		name string
-		raw  interface{}
+		raw  string
 		want map[string]string
 	}{
-		{"nil", nil, nil},
-		{"list", []interface{}{"FOO=bar", " SPACED = value "}, map[string]string{"FOO": "bar", "SPACED": "value"}},
-		{"list keeps text after second equals", []interface{}{"FOO=a=b"}, map[string]string{"FOO": "a=b"}},
-		{"list bare key reads agent env", []interface{}{"FROM_AGENT", "MISSING"}, map[string]string{"FROM_AGENT": "agent-value", "MISSING": ""}},
-		{"list skips empty key", []interface{}{"=value"}, map[string]string{}},
+		{"nil", ``, nil},
+		{"list", `["FOO=bar", " SPACED = value "]`, map[string]string{"FOO": "bar", "SPACED": "value"}},
+		{"list keeps text after second equals", `["FOO=a=b"]`, map[string]string{"FOO": "a=b"}},
+		{"list bare key reads agent env", `["FROM_AGENT", "MISSING"]`, map[string]string{"FROM_AGENT": "agent-value", "MISSING": ""}},
+		{"list skips empty key", `["=value"]`, map[string]string{}},
 		{
 			"map",
-			map[string]interface{}{"FOO": "bar", "PRIORITY": float64(-1), "LARGE": float64(1e21), "DEBUG": true},
-			map[string]string{"FOO": "bar", "PRIORITY": "-1", "LARGE": "1000000000000000000000", "DEBUG": "true"},
+			`{"FOO": "bar", "PRIORITY": -1, "LARGE": 12345678901234567891, "DEBUG": true}`,
+			map[string]string{"FOO": "bar", "PRIORITY": "-1", "LARGE": "12345678901234567891", "DEBUG": "true"},
 		},
-		{"map null reads agent env", map[string]interface{}{"FROM_AGENT": nil}, map[string]string{"FROM_AGENT": "agent-value"}},
+		{"map null reads agent env", `{"FROM_AGENT": null}`, map[string]string{"FROM_AGENT": "agent-value"}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseEnv(tt.raw)
+			got, err := parseEnv(json.RawMessage(tt.raw))
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
@@ -361,17 +362,17 @@ func TestParseEnv(t *testing.T) {
 func TestParseEnvRejectsInvalidShapes(t *testing.T) {
 	tests := []struct {
 		name string
-		raw  interface{}
+		raw  string
 	}{
-		{"string", "FOO=bar"},
-		{"list with non-string entry", []interface{}{float64(1)}},
-		{"map with nested map", map[string]interface{}{"FOO": map[string]interface{}{"x": float64(1)}}},
-		{"map with list value", map[string]interface{}{"FOO": []interface{}{"a"}}},
+		{"string", `"FOO=bar"`},
+		{"list with non-string entry", `[1]`},
+		{"map with nested map", `{"FOO": {"x": 1}}`},
+		{"map with list value", `{"FOO": ["a"]}`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseEnv(tt.raw)
+			_, err := parseEnv(json.RawMessage(tt.raw))
 			assert.Error(t, err)
 		})
 	}
