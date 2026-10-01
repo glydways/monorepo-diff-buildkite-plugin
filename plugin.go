@@ -356,6 +356,7 @@ func parseEnv(raw interface{}) (map[string]string, error) {
 			}
 
 			key, value, hasValue := strings.Cut(pair, "=")
+			// Note: Environment variable names cannot contain whitespace
 			key = strings.TrimSpace(key)
 			if len(key) == 0 {
 				continue
