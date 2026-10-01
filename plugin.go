@@ -344,7 +344,7 @@ func parseEnv(raw json.RawMessage) (map[string]string, error) {
 	decoder.UseNumber()
 	var decoded interface{}
 	if err := decoder.Decode(&decoded); err != nil {
-		return nil, fmt.Errorf("failed to parse plugin configuration: %w", err)
+		return nil, fmt.Errorf("parsing plugin configuration: %w", err)
 	}
 
 	switch entries := decoded.(type) {
@@ -383,7 +383,7 @@ func parseEnv(raw json.RawMessage) (map[string]string, error) {
 		}
 		return result, nil
 	default:
-		return nil, fmt.Errorf("failed to parse plugin configuration: env must be a list or a map, got %T", raw)
+		return nil, fmt.Errorf("failed to parse plugin configuration: env must be a list or a map, got %T", decoded)
 	}
 }
 
