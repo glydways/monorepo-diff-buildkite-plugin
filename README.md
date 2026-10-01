@@ -41,8 +41,9 @@ steps:
       - glydways/monorepo-diff#v2.6.8:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
+          # These entries are appended to all "env" configurations in jobs that use this plugin.
           env:
-            - env1=env-1 # this will be appended to all env configuration
+            env1: env-1
           hooks:
             - command: "echo $(git rev-parse HEAD) > last_successful_build"
           notify:
@@ -83,7 +84,7 @@ steps:
                 artifacts:
                   - "logs/*"
                 env:
-                  - FOO=bar
+                  FOO: bar
                 plugins:
                   - seek-oss/aws-sm#v2.3.1:
                     env:
@@ -271,10 +272,10 @@ Pass anything else you need explicitly via `build.env` or `build.meta_data`:
         release_channel: "stable"
 ```
 
-`build.env` is a list of `KEY=value` strings (or bare `KEY` to inherit), while
-`build.meta_data` is a map. Note that these env vars are visible to the triggered
-build's scripts but do not give it a real pull request association, so downstream
-`if:` expressions on `build.pull_request.*` still will not resolve.
+`build.env` is a mapping of `KEY: value`, list of `KEY=value` strings, or bare `KEY`
+to inherit, while `build.meta_data` is a map. Note that these env vars are visible
+to the triggered build's scripts but do not give it a real pull request association,
+so downstream `if:` expressions on `build.pull_request.*` still will not resolve.
 
 #### `if` and `branches` (optional)
 
@@ -354,7 +355,7 @@ steps:
                 agents:
                   queue: "deploy"
                 env:
-                  - FOO=bar
+                  FOO: bar
 ```
 
 There is currently limited support for command configuration. Only the `command` property can be provided at this point in time.

@@ -12,7 +12,7 @@ configuration:
     interpolation:
       type: boolean
     env:
-      type: array
+      type: [array, object]
     plugins:
       type: [array, object]
     notify:
@@ -105,7 +105,7 @@ configuration:
                 branch:
                   type: string
                 env:
-                  type: array
+                  type: [array, object]
                 meta_data:
                   type: object
             agents:
@@ -118,7 +118,7 @@ configuration:
             artifacts:
               type: array
             env:
-              type: array
+              type: [array, object]
             plugins:
               type: [array, object]
     wait:

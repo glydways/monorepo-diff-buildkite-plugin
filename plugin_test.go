@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -307,7 +308,7 @@ func TestPluginShouldErrorIfPluginConfigIsInvalid(t *testing.T) {
 		{
 			"github.com/glydways/monorepo-diff-buildkite-plugin#commit": {
 				"env": {
-					"anInvalidKey": "An Invalid Value"
+					"anInvalidKey": { "nested": "An Invalid Value" }
 				},
 				"watch": [
 					{
@@ -326,4 +327,106 @@ func TestPluginShouldErrorIfPluginConfigIsInvalid(t *testing.T) {
 	`
 	_, err := initializePlugin(param)
 	assert.Error(t, err)
+}
+
+func TestParseEnv(t *testing.T) {
+	t.Setenv("FROM_AGENT", "agent-value")
+
+	tests := []struct {
+		name string
+		raw  string
+		want map[string]string
+	}{
+		{"nil", ``, nil},
+		{"list", `["FOO=bar", " SPACED = value "]`, map[string]string{"FOO": "bar", "SPACED": "value"}},
+		{"list keeps text after second equals", `["FOO=a=b"]`, map[string]string{"FOO": "a=b"}},
+		{"list bare key reads agent env", `["FROM_AGENT", "MISSING"]`, map[string]string{"FROM_AGENT": "agent-value", "MISSING": ""}},
+		{"list skips empty key", `["=value"]`, map[string]string{}},
+		{
+			"map",
+			`{"FOO": "bar", "PRIORITY": -1, "LARGE": 12345678901234567891, "DEBUG": true}`,
+			map[string]string{"FOO": "bar", "PRIORITY": "-1", "LARGE": "12345678901234567891", "DEBUG": "true"},
+		},
+		{"map null reads agent env", `{"FROM_AGENT": null}`, map[string]string{"FROM_AGENT": "agent-value"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseEnv(json.RawMessage(tt.raw))
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestParseEnvRejectsInvalidShapes(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+	}{
+		{"string", `"FOO=bar"`},
+		{"list with non-string entry", `[1]`},
+		{"map with nested map", `{"FOO": {"x": 1}}`},
+		{"map with list value", `{"FOO": ["a"]}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := parseEnv(json.RawMessage(tt.raw))
+			assert.Error(t, err)
+		})
+	}
+}
+
+func TestPluginAcceptsMapEnvOnWatchedSteps(t *testing.T) {
+	t.Setenv("BUILDKITE_MESSAGE", "some message")
+	t.Setenv("BUILDKITE_BRANCH", "some-branch")
+	t.Setenv("BUILDKITE_COMMIT", "commit-hash")
+
+	param := `[{
+		"github.com/glydways/monorepo-diff-buildkite-plugin#commit": {
+			"watch": [
+				{
+					"path": "foo-service/",
+					"config": {
+						"command": "echo foo",
+						"env": { "OWNER_SLACK_GROUP": "@data-platform-triage" }
+					}
+				},
+				{
+					"path": "bar-service/",
+					"config": {
+						"trigger": "bar-pipeline",
+						"build": { "env": { "JOB_FILTER": "atp_unit_tests", "PRIORITY": "-1" } }
+					}
+				}
+			]
+		}
+	}]`
+
+	got, err := initializePlugin(param)
+
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"OWNER_SLACK_GROUP": "@data-platform-triage"}, got.Watch[0].Step.Env)
+	assert.Equal(t, map[string]string{"JOB_FILTER": "atp_unit_tests", "PRIORITY": "-1"}, got.Watch[1].Step.Build.Env)
+}
+
+func TestPluginErrorsOnInvalidWatchedStepEnv(t *testing.T) {
+	param := `[{
+		"github.com/glydways/monorepo-diff-buildkite-plugin#commit": {
+			"watch": [
+				{
+					"path": "foo-service/",
+					"config": {
+						"command": "echo foo",
+						"env": { "FOO": { "nested": "value" } }
+					}
+				}
+			]
+		}
+	}]`
+
+	_, err := initializePlugin(param)
+
+	assert.EqualError(t, err, "failed to parse plugin configuration")
 }

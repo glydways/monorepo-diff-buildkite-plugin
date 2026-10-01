@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -18,7 +21,7 @@ type Plugin struct {
 	Interpolation bool
 	Hooks         []HookConfig
 	Watch         []WatchConfig
-	RawEnv        interface{} `json:"env"`
+	RawEnv        json.RawMessage `json:"env"`
 	Env           map[string]string
 	RawNotify     []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify        []PluginNotify           `yaml:"notify,omitempty"`
@@ -78,7 +81,7 @@ type Step struct {
 	Commands          interface{}              `yaml:"commands,omitempty"`
 	Agents            Agent                    `yaml:"agents,omitempty"`
 	Artifacts         []string                 `yaml:"artifacts,omitempty"`
-	RawEnv            interface{}              `json:"env" yaml:",omitempty"`
+	RawEnv            json.RawMessage          `json:"env" yaml:",omitempty"`
 	Env               map[string]string        `yaml:"env,omitempty"`
 	Async             bool                     `yaml:"async,omitempty"`
 	SoftFail          interface{}              `json:"soft_fail" yaml:"soft_fail,omitempty"`
@@ -104,7 +107,7 @@ type Build struct {
 	Message  string            `yaml:"message,omitempty"`
 	Branch   string            `yaml:"branch,omitempty"`
 	Commit   string            `yaml:"commit,omitempty"`
-	RawEnv   interface{}       `json:"env" yaml:",omitempty"`
+	RawEnv   json.RawMessage   `json:"env" yaml:",omitempty"`
 	Env      map[string]string `yaml:"env,omitempty"`
 	MetaData map[string]string `json:"meta_data,omitempty" yaml:"meta_data,omitempty"`
 }
@@ -160,7 +163,9 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 			setNotify(&plugin.Watch[i].Step.Notify, &plugin.Watch[i].Step.RawNotify)
 		}
 
-		appendEnv(&plugin.Watch[i], plugin.Env)
+		if err := appendEnv(&plugin.Watch[i], plugin.Env); err != nil {
+			return fmt.Errorf("integrating environment specification into plugin watch configuration at index %d: %w", i, err)
+		}
 
 		p.RawPath = nil
 	}
@@ -292,10 +297,15 @@ func setBuild(build *Build) {
 	}
 }
 
-// appends top level env to Step.Env and Step.Build.Env
-func appendEnv(watch *WatchConfig, env map[string]string) {
-	watch.Step.Env, _ = parseEnv(watch.Step.RawEnv)
-	watch.Step.Build.Env, _ = parseEnv(watch.Step.Build.RawEnv)
+// appendEnv appends a top-level env to Step.Env and Step.Build.Env.
+func appendEnv(watch *WatchConfig, env map[string]string) error {
+	var err error
+	if watch.Step.Env, err = parseEnv(watch.Step.RawEnv); err != nil {
+		return fmt.Errorf("parsing raw environment specification from step: %w", err)
+	}
+	if watch.Step.Build.Env, err = parseEnv(watch.Step.Build.RawEnv); err != nil {
+		return fmt.Errorf("parsing raw environment specification from build: %w", err)
+	}
 
 	for key, value := range env {
 		if watch.Step.Command != nil || watch.Step.Commands != nil {
@@ -319,32 +329,76 @@ func appendEnv(watch *WatchConfig, env map[string]string) {
 	watch.Step.RawEnv = nil
 	watch.Step.Build.RawEnv = nil
 	watch.RawPath = nil
+	return nil
 }
 
-// parse env in format from env=env-value to map[env] = env-value
-func parseEnv(raw interface{}) (map[string]string, error) {
-	if raw == nil {
+// parseEnv interprets either a list of "KEY=value" strings or a mapping entry pair as a set of environment variable bindings.
+// A bare KEY (or a null map value) takes its value from the agent environment.
+func parseEnv(raw json.RawMessage) (map[string]string, error) {
+	if len(raw) == 0 {
 		return nil, nil
 	}
 
-	if _, ok := raw.([]interface{}); ok != true {
-		return nil, errors.New("failed to parse plugin configuration")
+	// UseNumber keeps numeric values as written instead of rounding them through float64.
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var decoded interface{}
+	if err := decoder.Decode(&decoded); err != nil {
+		return nil, fmt.Errorf("parsing plugin configuration: %w", err)
 	}
 
-	result := make(map[string]string)
-	for _, v := range raw.([]interface{}) {
-		split := strings.Split(v.(string), "=")
-		key, value := strings.TrimSpace(split[0]), split[1:]
-
-		// only key exists. set value from env
-		if len(key) > 0 && len(value) == 0 {
-			result[key] = env(key, "")
+	switch entries := decoded.(type) {
+	case nil:
+		return nil, nil
+	case map[string]interface{}:
+		result := make(map[string]string, len(entries))
+		for key, value := range entries {
+			parsed, err := parseEnvValue(key, value)
+			if err != nil {
+				return nil, err
+			}
+			result[key] = parsed
 		}
+		return result, nil
+	case []interface{}:
+		result := make(map[string]string, len(entries))
+		for _, entry := range entries {
+			pair, ok := entry.(string)
+			if !ok {
+				return nil, fmt.Errorf("failed to parse plugin configuration: env entry %v must be a string, got %T", entry, entry)
+			}
 
-		if len(value) > 0 {
-			result[key] = strings.TrimSpace(value[0])
+			key, value, hasValue := strings.Cut(pair, "=")
+			// Note: Environment variable names cannot contain whitespace
+			key = strings.TrimSpace(key)
+			if len(key) == 0 {
+				continue
+			}
+
+			if !hasValue {
+				result[key] = env(key, "")
+				continue
+			}
+			result[key] = strings.TrimSpace(value)
 		}
+		return result, nil
+	default:
+		return nil, fmt.Errorf("failed to parse plugin configuration: env must be a list or a map, got %T", decoded)
 	}
+}
 
-	return result, nil
+func parseEnvValue(key string, value interface{}) (string, error) {
+	// The config comes from encoding/json, which decodes every scalar into one of these types.
+	switch v := value.(type) {
+	case nil:
+		return env(key, ""), nil
+	case string:
+		return v, nil
+	case bool:
+		return strconv.FormatBool(v), nil
+	case json.Number:
+		return v.String(), nil
+	default:
+		return "", fmt.Errorf("failed to parse plugin configuration: environment value %q must be a scalar, got %T", key, value)
+	}
 }
