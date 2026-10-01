@@ -357,7 +357,7 @@ func parseEnv(raw interface{}) (map[string]string, error) {
 
 			key, value, hasValue := strings.Cut(pair, "=")
 			key = strings.TrimSpace(key)
-			if key == "" {
+			if len(key) == 0 {
 				continue
 			}
 
