@@ -163,7 +163,7 @@ func (plugin *Plugin) UnmarshalJSON(data []byte) error {
 		}
 
 		if err := appendEnv(&plugin.Watch[i], plugin.Env); err != nil {
-			return err
+			return fmt.Errorf("integrating environment specification into plugin watch configuration at index %d: %w", i, err)
 		}
 
 		p.RawPath = nil
@@ -296,14 +296,14 @@ func setBuild(build *Build) {
 	}
 }
 
-// appends top level env to Step.Env and Step.Build.Env
+// appendEnv appends a top-level env to Step.Env and Step.Build.Env.
 func appendEnv(watch *WatchConfig, env map[string]string) error {
 	var err error
 	if watch.Step.Env, err = parseEnv(watch.Step.RawEnv); err != nil {
-		return err
+		return fmt.Errorf("parsing raw environment specification from step: %w", err)
 	}
 	if watch.Step.Build.Env, err = parseEnv(watch.Step.Build.RawEnv); err != nil {
-		return err
+		return fmt.Errorf("parsing raw environment specification from build: %w", err)
 	}
 
 	for key, value := range env {
@@ -331,7 +331,7 @@ func appendEnv(watch *WatchConfig, env map[string]string) error {
 	return nil
 }
 
-// parse env from either a list of KEY=value strings or a KEY: value map.
+// parseEnv interprets either a list of "KEY=value" strings or a mapping entry pair as a set of environment variable bindings.
 // A bare KEY (or a null map value) takes its value from the agent environment.
 func parseEnv(raw interface{}) (map[string]string, error) {
 	switch entries := raw.(type) {
@@ -344,7 +344,7 @@ func parseEnv(raw interface{}) (map[string]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			result[strings.TrimSpace(key)] = parsed
+			result[key] = parsed
 		}
 		return result, nil
 	case []interface{}:
@@ -352,7 +352,7 @@ func parseEnv(raw interface{}) (map[string]string, error) {
 		for _, entry := range entries {
 			pair, ok := entry.(string)
 			if !ok {
-				return nil, fmt.Errorf("failed to parse plugin configuration: env entry %v is not a string", entry)
+				return nil, fmt.Errorf("failed to parse plugin configuration: env entry %v must be a string, got %T", entry, entry)
 			}
 
 			key, value, hasValue := strings.Cut(pair, "=")
@@ -369,11 +369,12 @@ func parseEnv(raw interface{}) (map[string]string, error) {
 		}
 		return result, nil
 	default:
-		return nil, errors.New("failed to parse plugin configuration")
+		return nil, fmt.Errorf("failed to parse plugin configuration: env must be a list or a map, got %T", raw)
 	}
 }
 
 func parseEnvValue(key string, value interface{}) (string, error) {
+	// The config comes from encoding/json, which decodes every scalar into one of these types.
 	switch v := value.(type) {
 	case nil:
 		return env(key, ""), nil
@@ -384,6 +385,6 @@ func parseEnvValue(key string, value interface{}) (string, error) {
 	case float64:
 		return strconv.FormatFloat(v, 'f', -1, 64), nil
 	default:
-		return "", fmt.Errorf("failed to parse plugin configuration: env %s must be a scalar, got %T", key, value)
+		return "", fmt.Errorf("failed to parse plugin configuration: environment value %q must be a scalar, got %T", key, value)
 	}
 }

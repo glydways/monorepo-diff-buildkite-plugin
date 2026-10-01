@@ -41,8 +41,9 @@ steps:
       - glydways/monorepo-diff#v2.6.8:
           diff: "git diff --name-only $(head -n 1 last_successful_build)"
           interpolation: false
+          # These entries are appended to all "env" configurations in jobs that use this plugin.
           env:
-            env1: env-1 # this will be appended to all env configuration
+            env1: env-1
           hooks:
             - command: "echo $(git rev-parse HEAD) > last_successful_build"
           notify:
