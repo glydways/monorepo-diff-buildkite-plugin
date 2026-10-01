@@ -272,7 +272,7 @@ Pass anything else you need explicitly via `build.env` or `build.meta_data`:
         release_channel: "stable"
 ```
 
-`build.env` is a map of `KEY: value`, list of `KEY=value` strings, or bare `KEY`
+`build.env` is a mapping of `KEY: value`, list of `KEY=value` strings, or bare `KEY`
 to inherit, while `build.meta_data` is a map. Note that these env vars are visible
 to the triggered build's scripts but do not give it a real pull request association,
 so downstream `if:` expressions on `build.pull_request.*` still will not resolve.
