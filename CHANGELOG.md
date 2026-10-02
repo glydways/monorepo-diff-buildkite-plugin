@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.9]
+
+### Added
+- `env` accepts a `KEY: value` mapping alongside the list of `KEY=value` strings, at the
+  top level, on watched steps, and in `build.env`. Unquoted numbers and booleans become
+  strings, and a null value inherits from the agent environment. The agent parses the YAML
+  first, so `True` becomes `true` and `1.10` becomes `1.1`; quote a value to keep its text.
+
+### Changed
+- An invalid `env` on a watched step fails the plugin with an error naming the problem.
+  It was previously ignored, so the step ran without any of its env vars.
+
+### Fixed
+- A list entry keeps everything after its first `=`, so `FOO=a=b` sets `FOO` to `a=b`
+  instead of `a`.
+- A non-string list entry is reported as an error instead of panicking.
+
 ## [2.6.8]
 
 ### Added
