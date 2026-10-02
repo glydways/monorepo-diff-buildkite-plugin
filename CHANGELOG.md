@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `env` accepts a `KEY: value` mapping alongside the list of `KEY=value` strings, at the
-  top level, on watched steps, and in `build.env`. Unquoted numbers and booleans keep the
-  text they were written with, and a null value inherits from the agent environment.
+  top level, on watched steps, and in `build.env`. Unquoted numbers and booleans become
+  strings, and a null value inherits from the agent environment. The agent parses the YAML
+  first, so `True` becomes `true` and `1.10` becomes `1.1`; quote a value to keep its text.
 
 ### Changed
 - An invalid `env` on a watched step fails the plugin with an error naming the problem.
